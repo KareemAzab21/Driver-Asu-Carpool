@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'Home.dart';
 
-
 class OfferRidePage extends StatefulWidget {
   @override
   _OfferRidePageState createState() => _OfferRidePageState();
@@ -12,18 +11,44 @@ class OfferRidePage extends StatefulWidget {
 
 class _OfferRidePageState extends State<OfferRidePage> {
   DateTime selectedDate = DateTime.now();
-  TimeOfDay selectedTime = TimeOfDay(hour: 7, minute: 30); // Default time for the morning ride
+  TimeOfDay selectedTime =
+      TimeOfDay(hour: 7, minute: 30); // Default time for the morning ride
   bool isToUniversity = true; // Default direction
   TextEditingController _locationController = TextEditingController();
 
-  TextEditingController _stopsController = TextEditingController(); // Controller for stops
-  TextEditingController _priceController = TextEditingController(); // Controller for price
+  TextEditingController _stopsController =
+      TextEditingController(); // Controller for stops
+  TextEditingController _priceController =
+      TextEditingController(); // Controller for price
 
   String generateUniqueId() {
     var uniqueId = FirebaseFirestore.instance.collection('dummy').doc().id;
     return uniqueId;
   }
 
+  void _showConfirmation(BuildContext context){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Ride Offered"),
+          content: Text(
+              "Ride has been Offered Successfully, Track the ride request in YOUR REQUESTS"),
+          actions: <Widget>[
+            TextButton(
+              child: Text("OK"),
+              onPressed: () {
+                Navigator.of(context)
+                    .pop(); // Close the dialog
+                Navigator.pushReplacementNamed(context, '/Home');
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+  }
 
   // Dynamic list to hold the stops
   List<TextEditingController> _stopsControllers = [];
@@ -48,8 +73,8 @@ class _OfferRidePageState extends State<OfferRidePage> {
           ],
         ),
       ),
-      body: ListView(
-        children:[ Center(
+      body: ListView(children: [
+        Center(
           child: Container(
             padding: EdgeInsets.all(20),
             child: Column(
@@ -77,7 +102,8 @@ class _OfferRidePageState extends State<OfferRidePage> {
                     onChanged: (bool? value) {
                       setState(() {
                         isToUniversity = value!;
-                        selectedTime = TimeOfDay(hour: 7, minute: 30); // Morning time
+                        selectedTime =
+                            TimeOfDay(hour: 7, minute: 30); // Morning time
                       });
                     },
                   ),
@@ -90,7 +116,8 @@ class _OfferRidePageState extends State<OfferRidePage> {
                     onChanged: (bool? value) {
                       setState(() {
                         isToUniversity = value!;
-                        selectedTime = TimeOfDay(hour: 17, minute: 30); // Evening time
+                        selectedTime =
+                            TimeOfDay(hour: 17, minute: 30); // Evening time
                       });
                     },
                   ),
@@ -140,7 +167,6 @@ class _OfferRidePageState extends State<OfferRidePage> {
                   onPressed: _addNewStop,
                   child: Text("Add Stop"),
                 ),
-        
                 SizedBox(height: 20),
                 TextField(
                   controller: _priceController,
@@ -157,14 +183,17 @@ class _OfferRidePageState extends State<OfferRidePage> {
                       User? user = FirebaseAuth.instance.currentUser;
                       if (user != null) {
                         // Assuming you have the document ID where the 'Rides' array is stored
-                        String documentId = 'ycZ5NZGj2B6Xe5ILWb7l'; // Replace with actual document ID
-                        if (_locationController.text.isEmpty || _priceController.text.isEmpty) {
+                        String documentId =
+                            'ycZ5NZGj2B6Xe5ILWb7l'; // Replace with actual document ID
+                        if (_locationController.text.isEmpty ||
+                            _priceController.text.isEmpty) {
                           showDialog(
                             context: context,
                             builder: (BuildContext context) {
                               return AlertDialog(
                                 title: Text("Missing Information"),
-                                content: Text("Please enter both a location and a price to offer a ride."),
+                                content: Text(
+                                    "Please enter both a location and a price to offer a ride."),
                                 actions: <Widget>[
                                   TextButton(
                                     child: Text("OK"),
@@ -179,17 +208,36 @@ class _OfferRidePageState extends State<OfferRidePage> {
                           return;
                         }
                         final DateTime now = DateTime.now();
-                        final DateTime cutoffMorning = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, 22, 0).subtract(Duration(days: 1));
-                        final DateTime cutoffEvening = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, 13, 0);
+                        final DateTime cutoffMorning = DateTime(
+                                selectedDate.year,
+                                selectedDate.month,
+                                selectedDate.day,
+                                22,
+                                0)
+                            .subtract(Duration(days: 1));
+                        final DateTime cutoffEvening = DateTime(
+                            selectedDate.year,
+                            selectedDate.month,
+                            selectedDate.day,
+                            13,
+                            0);
 
-                        bool isMorningRide = isToUniversity && selectedTime.hour == 7 && selectedTime.minute == 30;
-                        bool isEveningRide = !isToUniversity && selectedTime.hour == 17 && selectedTime.minute == 30;
+                        bool isMorningRide = isToUniversity &&
+                            selectedTime.hour == 7 &&
+                            selectedTime.minute == 30;
+                        bool isEveningRide = !isToUniversity &&
+                            selectedTime.hour == 17 &&
+                            selectedTime.minute == 30;
 
-                        bool canOfferMorningRide = isMorningRide && now.isBefore(cutoffMorning) ;
-                        bool canOfferEveningRide = isEveningRide && now.isBefore(cutoffEvening);
+                        bool canOfferMorningRide =
+                            isMorningRide && now.isBefore(cutoffMorning);
+                        bool canOfferEveningRide =
+                            isEveningRide && now.isBefore(cutoffEvening);
 
-                        if ((isMorningRide && !canOfferMorningRide) || (isEveningRide && !canOfferEveningRide)) {
-                          String message = isMorningRide ?  "The cutoff time for offering a morning ride has passed."
+                        if ((isMorningRide && !canOfferMorningRide) ||
+                            (isEveningRide && !canOfferEveningRide)) {
+                          String message = isMorningRide
+                              ? "The cutoff time for offering a morning ride has passed."
                               : "The cutoff time for offering an evening ride has passed.";
                           showDialog(
                             context: context,
@@ -199,32 +247,77 @@ class _OfferRidePageState extends State<OfferRidePage> {
                                 content: Text(message),
                                 actions: <Widget>[
                                   TextButton(
-                                    child: Text("OK"),
-                                    onPressed: () {
+                                    child: Text("ByPass"),
+                                    onPressed: ()  {
                                       Navigator.of(context).pop();
+                                      Map<String, dynamic> newRideData = {
+                                      'driver': user.uid,
+                                      'date': selectedDate.toIso8601String(),
+                                      'time': selectedTime.format(context),
+                                      'to': isToUniversity
+                                          ? 'Ain Shams University'
+                                          : _locationController.text,
+                                      'from': isToUniversity
+                                          ? _locationController.text
+                                          : 'Ain Shams University',
+                                      'stops': _stopsControllers
+                                          .map((c) => c.text)
+                                          .toList(),
+                                      'price': _priceController.text,
+                                      'id': generateUniqueId(),
+                                      'Users': {},
+                                    };
+                                    DocumentReference documentRef =
+                                    FirebaseFirestore.instance
+                                        .collection('rides')
+                                        .doc(documentId);
+
+                                    // Update the 'Rides' array within the document
+                                    documentRef.update({
+                                      'Rides':
+                                      FieldValue.arrayUnion([newRideData])
+                                    });
+
+                                    _showConfirmation(this.context);
+
+
+
+
+
                                     },
                                   ),
                                 ],
                               );
                             },
                           );
+
+
                           return;
                         }
+
                         // Prepare the new ride data
                         Map<String, dynamic> newRideData = {
                           'driver': user.uid,
                           'date': selectedDate.toIso8601String(),
                           'time': selectedTime.format(context),
-                          'to': isToUniversity ? 'Ain Shams University' : _locationController.text,
-                          'from': isToUniversity ? _locationController.text : 'Ain Shams University',
-                          'stops': _stopsControllers.map((c) => c.text).toList(),
+                          'to': isToUniversity
+                              ? 'Ain Shams University'
+                              : _locationController.text,
+                          'from': isToUniversity
+                              ? _locationController.text
+                              : 'Ain Shams University',
+                          'stops':
+                              _stopsControllers.map((c) => c.text).toList(),
                           'price': _priceController.text,
-                          'id':generateUniqueId(),
-                          'Users':{},
+                          'id': generateUniqueId(),
+                          'Users': {},
                         };
 
                         // Reference to the document that contains the 'Rides' array
-                        DocumentReference documentRef = FirebaseFirestore.instance.collection('rides').doc(documentId);
+                        DocumentReference documentRef = FirebaseFirestore
+                            .instance
+                            .collection('rides')
+                            .doc(documentId);
 
                         // Update the 'Rides' array within the document
                         await documentRef.update({
@@ -237,12 +330,14 @@ class _OfferRidePageState extends State<OfferRidePage> {
                           builder: (BuildContext context) {
                             return AlertDialog(
                               title: Text("Ride Offered"),
-                              content: Text("Ride has been Offered Successfully, Track the ride request in YOUR REQUESTS"),
+                              content: Text(
+                                  "Ride has been Offered Successfully, Track the ride request in YOUR REQUESTS"),
                               actions: <Widget>[
                                 TextButton(
                                   child: Text("OK"),
                                   onPressed: () {
-                                    Navigator.of(context).pop(); // Close the dialog
+                                    Navigator.of(context)
+                                        .pop(); // Close the dialog
                                   },
                                 ),
                               ],
@@ -257,14 +352,12 @@ class _OfferRidePageState extends State<OfferRidePage> {
                     },
                     child: Text("Offer Ride"),
                   ),
-
                 ),
               ],
             ),
           ),
         ),
-    ]
-      ),
+      ]),
     );
   }
 
@@ -281,6 +374,7 @@ class _OfferRidePageState extends State<OfferRidePage> {
         selectedDate = picked;
       });
   }
+
   void _addNewStop() {
     setState(() {
       _stopsControllers.add(TextEditingController());
@@ -292,6 +386,7 @@ class _OfferRidePageState extends State<OfferRidePage> {
       _stopsControllers.removeAt(index);
     });
   }
+
   bool _decideWhichDayToEnable(DateTime day) {
     if (day.weekday == DateTime.friday) {
       return false; // Disables selection of Fridays
