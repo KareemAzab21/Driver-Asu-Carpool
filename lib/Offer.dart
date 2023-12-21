@@ -286,6 +286,9 @@ class _OfferRidePageState extends State<OfferRidePage> {
 
                                     },
                                   ),
+                                  TextButton(onPressed:(){
+                                    Navigator.pop(context);
+                                  }, child: Text('OK'))
                                 ],
                               );
                             },

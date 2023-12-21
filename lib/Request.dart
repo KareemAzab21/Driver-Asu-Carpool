@@ -83,7 +83,7 @@ class RequestsPage extends StatelessWidget {
           } else {
             // Handle the case where the ride is not found
             print("Ride not found in history.");
-            return;
+             return;
           }
 
           // Write the updated history array back to Firestore
@@ -229,6 +229,82 @@ class RequestsPage extends StatelessWidget {
                             icon: Icon(Icons.check_circle, color: Colors.green[700]),
                             iconSize: 30.0, // Adjust the icon size here
                             onPressed: () async {
+                              String dateTimeString = request['date']; // Example date-time from screenshot
+                              String timeString = request['time']; // Example time in 12-hour format
+
+// Extract the date part from the dateTimeString
+                              String dateString = dateTimeString.split("T")[0]; // "2023-12-13"
+
+// Convert 12-hour format time to 24-hour format
+                              int hour = int.parse(timeString.split(":")[0]);
+                              int minute = int.parse(timeString.split(":")[1].split(" ")[0]);
+                              String amPm = timeString.split(" ")[1];
+                              if (amPm == "PM" && hour != 12) {
+                                hour = hour + 12;
+                              } else if (amPm == "AM" && hour == 12) {
+                                hour = 0;
+                              }
+                              DateTime rideDateTime = DateTime(
+                                  int.parse(dateString.split("-")[0]), // Year
+                                  int.parse(dateString.split("-")[1]), // Month
+                                  int.parse(dateString.split("-")[2]), // Day
+                                  hour,
+                                  minute
+                              );
+
+// Combine date and time into a single DateTime object
+                              DateTime cutoff=DateTime.now();
+                              if (rideDateTime.hour == 7 && rideDateTime.minute == 30) { // Morning ride
+                                cutoff = DateTime(rideDateTime.year, rideDateTime.month, rideDateTime.day, 23, 30).subtract(Duration(days: 1));
+                              } else if (rideDateTime.hour == 17 && rideDateTime.minute == 30) { // Evening ride
+                                cutoff = DateTime(rideDateTime.year, rideDateTime.month, rideDateTime.day, 16, 30);
+                              } else {
+                                // Handle other cases or set a default cutoff
+                              }
+
+                              // Check if current time is after the cutoff
+                              if (DateTime.now().isAfter(cutoff)){
+                                String message = 'Cutoff time has passed';
+
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: Text("Cannot Accept a Ride"),
+                                      content: Text(message),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          child: Text("ByPass"),
+                                          onPressed: ()  async{
+                                            Navigator.of(context).pop();
+                                            await FirebaseFirestore.instance
+                                                .collection('requests')
+                                                .doc(currentUser?.uid)
+                                                .update({
+                                              'Requests': FieldValue.arrayRemove([request])
+                                            });
+
+                                            updateRideStatusInHistory(request, 'Accepted');
+                                            appendUserIdToRideUsers(request['id'],request['user']);
+
+
+
+
+
+
+                                          },
+                                        ),
+                                        TextButton(onPressed:(){
+                                          Navigator.pop(context);
+                                        }, child: Text('OK'))
+                                      ],
+                                    );
+                                  },
+                                );
+
+
+                                return;
+                              }
                               // Handle accept action
                               try {
                                 // Delete the request from the 'requests' collection

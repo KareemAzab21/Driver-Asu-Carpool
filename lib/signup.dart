@@ -179,7 +179,7 @@ class _SignupPageState extends State<SignupPage> {
                                   // Check if the document exists
                                   if (!docSnapshot.exists) {
                                     // If the document does not exist, create it empty
-                                    docRef.set({'Requests':{}});
+                                    docRef.set({'Requests':[]});
                                   }
                                 });
 
